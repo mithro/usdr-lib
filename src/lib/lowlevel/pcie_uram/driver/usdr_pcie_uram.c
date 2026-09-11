@@ -1337,6 +1337,28 @@ static long usdrfd_ioctl(struct file *filp,
             return res;
         }
 
+        // Drop any completion event left over from an earlier transaction
+        // before issuing this one.
+        //
+        // The FPGA posts a completion event for every I2C transaction, but the
+        // wait below only runs for reads (si2c.rcnt > 0). Every write-only
+        // transaction therefore leaves an unconsumed event behind, and
+        // irq_ev_cnt[irq] stays non-zero. The next read's wait condition,
+        // atomic_xchg(&irq_ev_cnt[irq], 0) != 0, is then already true, so it
+        // returns without waiting for its own completion and hands back
+        // rb_ev_data[irq] from the *previous* transaction.
+        //
+        // That produces a permanent off-by-one: every read returns the previous
+        // read's value. On an XSDR it makes lp8758_get_rev() compose the PMIC
+        // revision from a stale byte plus DEV_REV, yielding 0x0100 instead of
+        // 0xe001, so pmic_ch145_valid stays false and _xsdr_pwren_revx() fails
+        // with -EIO -- which surfaces to userspace as every sample rate being
+        // rejected ("Unable to set device rate: errno -5").
+        //
+        // Clearing here makes the wait satisfiable only by this transaction's
+        // own completion.
+        atomic_set(&usdrdev->irq_ev_cnt[irq], 0);
+
         if (usdrdev->i2clut[i2cinst] == lut) {
             usdr_reg_wr32(usdrdev, base, cmd);
         } else {
