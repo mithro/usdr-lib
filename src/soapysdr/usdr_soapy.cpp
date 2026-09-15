@@ -270,7 +270,21 @@ static const device_ranges usdr_ranges {
 };
 
 static const device_ranges xsdr_ranges {
-    .frequency_range = SoapySDR::Range(0.1e6, 3800e6),
+    // Minimum is 30e6, not 0.1e6. The LMS7002M's SXR synthesiser refuses a low
+    // LO, so setFrequency() fails below 30 MHz:
+    //     WARN: [7002] SXR: LO=64000000 is out of range
+    //     setting center frequency failed
+    // Measured by sweeping usdr_dm_create -e on an XSDR: 1 / 5 / 10 / 20 / 24 /
+    // 26 / 27 / 28 / 29 / 29.5 MHz all fail that way, 30 / 40 / 50 / 100 MHz
+    // all capture cleanly. That is the LMS7002M's datasheet range (30 MHz -
+    // 3.8 GHz), which the 0.1e6 here never reflected.
+    //
+    // Same class of bug as the samplerate minimum below, and the same
+    // consequence for clients: a host application that trusts the advertised
+    // range will offer a band the radio cannot tune, and in OpenWebRX one
+    // untunable profile fails the connector and takes the entire receiver
+    // offline, not just that profile.
+    .frequency_range = SoapySDR::Range(30e6, 3800e6),
     // Minimum is 0.2e6, not 0.1e6: below 200 kHz the FPGA's TX MMCM never
     // asserts its ready flag, and setSampleRate() fails with -5:
     //     MMCM_TX set to MCLK = 6.400 IOCLK = 6.400 Mhz IODIV = 126 ...

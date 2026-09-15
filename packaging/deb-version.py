@@ -29,7 +29,7 @@ BASE = "0.9.10b"          # the release this snapshot precedes
 # UPSTREAM_COMMIT, so a LOCAL SOURCE patch layered on top would ship
 # different binaries under an identical version and apt would refuse to
 # upgrade. Bump this whenever a commit on this branch changes src/.
-REVISION = "0+welland2"
+REVISION = "0+welland3"
 MAINTAINER = "Tim 'mithro' Ansell <me@mith.ro>"
 # Pinned upstream usdr-lib commit; the version tracks THIS, not packaging HEAD.
 #
