@@ -271,7 +271,22 @@ static const device_ranges usdr_ranges {
 
 static const device_ranges xsdr_ranges {
     .frequency_range = SoapySDR::Range(0.1e6, 3800e6),
-    .samplerate_range = SoapySDR::Range(0.1e6, 125e6),
+    // Minimum is 0.2e6, not 0.1e6: below 200 kHz the FPGA's TX MMCM never
+    // asserts its ready flag, and setSampleRate() fails with -5:
+    //     MMCM_TX set to MCLK = 6.400 IOCLK = 6.400 Mhz IODIV = 126 ...
+    //     ERROR: [XDEV] MMCM Ready flag timed out!
+    //     WARN:  [XDEV] BIST TX_DONE=0 RX_DONE=0
+    // Measured on an XSDR (10ee:7049, gateware 2026-06-16) by sweeping
+    // SoapySDRUtil --rate: 0.11 / 0.13 / 0.15 / 0.17 / 0.19 MHz all fail that
+    // way; 0.2 MHz and everything above streams cleanly.
+    //
+    // This is not cosmetic. ensureSampleRateConfigured() configures
+    // samplerate_range.minimum() whenever no rate has been set yet, and
+    // setFrequency() calls it — so advertising an unachievable minimum made
+    // every client that tunes before setting a rate fail to open the device at
+    // all. owrx-connector's soapy_connector does exactly that, which left
+    // OpenWebRX unable to start the radio ("Connector::setup() failed").
+    .samplerate_range = SoapySDR::Range(0.2e6, 125e6),
     .bandwidth_range = SoapySDR::Range(0.5e6, 125e6),
 };
 
