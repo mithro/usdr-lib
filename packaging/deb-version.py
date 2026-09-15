@@ -24,7 +24,12 @@ REPO = Path(__file__).resolve().parent.parent
 CHANGELOG = REPO / "debian" / "changelog"
 SOURCE = "usdr"
 BASE = "0.9.10b"          # the release this snapshot precedes
-REVISION = "0+welland1"
+# Bumped to welland2 for the xsdr minimum-sample-rate fix in
+# src/soapysdr/usdr_soapy.cpp. The version otherwise tracks
+# UPSTREAM_COMMIT, so a LOCAL SOURCE patch layered on top would ship
+# different binaries under an identical version and apt would refuse to
+# upgrade. Bump this whenever a commit on this branch changes src/.
+REVISION = "0+welland2"
 MAINTAINER = "Tim 'mithro' Ansell <me@mith.ro>"
 # Pinned upstream usdr-lib commit; the version tracks THIS, not packaging HEAD.
 #
