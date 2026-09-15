@@ -27,7 +27,18 @@ BASE = "0.9.10b"          # the release this snapshot precedes
 REVISION = "0+welland1"
 MAINTAINER = "Tim 'mithro' Ansell <me@mith.ro>"
 # Pinned upstream usdr-lib commit; the version tracks THIS, not packaging HEAD.
-UPSTREAM_COMMIT = "069df21"
+#
+# NOT main. main has been frozen at 069df21 since 2025-11-18 while development
+# continued on feature_pe_sync. The XSDR in rpi-sdr-xsdr runs gateware built
+# 2026-06-16 — SEVEN MONTHS newer than main — and main cannot drive it: the
+# control plane works, but RX DMA never completes and usdr_dm_create dies with
+#     CRIT:  [PCIE]  RES -1 != 512 OOBLEN
+#     ERROR: [DMCR] RX error, unable to recv data: errno -110   (-ETIMEDOUT)
+# Among ~3900 lines of XSDR changes main is missing, one names the problem
+# outright: 7032dd9 "usdr_pcie_uram: set RX DMA boundaries for the newest FPGA
+# images". That commit was tested in isolation on the target and is NOT
+# sufficient by itself, so do not cherry-pick it onto main and call it fixed.
+UPSTREAM_COMMIT = "691f9b5"
 
 
 def _git(*args):
