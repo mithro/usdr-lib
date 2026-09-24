@@ -49,10 +49,10 @@ and would drag a desktop stack onto headless fleet hosts.
 ## Consuming it
 
 ```bash
-curl -fsSL https://mithro.github.io/usdr-lib/usdr.gpg \
-  | sudo tee /etc/apt/keyrings/mithro-usdr.gpg > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/mithro-usdr.gpg] https://mithro.github.io/usdr-lib/ ./" \
-  | sudo tee /etc/apt/sources.list.d/mithro-usdr.list
+curl -fsSL https://mithro.github.io/usdr-lib/usdr-lib.gpg \
+  | sudo tee /etc/apt/keyrings/usdr-lib.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/usdr-lib.gpg] https://mithro.github.io/usdr-lib/trixie/ ./" \
+  | sudo tee /etc/apt/sources.list.d/usdr-lib.list
 sudo apt update
 sudo apt install usdr-tools usdr-dkms soapysdr-module-usdr
 ```
