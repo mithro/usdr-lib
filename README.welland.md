@@ -49,9 +49,9 @@ and would drag a desktop stack onto headless fleet hosts.
 ## Consuming it
 
 ```bash
-curl -fsSL https://mithro.github.io/usdr-lib/usdr-lib.gpg \
+curl -fsSL https://mith.ro/usdr-lib/usdr-lib.gpg \
   | sudo tee /etc/apt/keyrings/usdr-lib.gpg > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/usdr-lib.gpg] https://mithro.github.io/usdr-lib/trixie/ ./" \
+echo "deb [signed-by=/etc/apt/keyrings/usdr-lib.gpg] https://mith.ro/usdr-lib/trixie/ ./" \
   | sudo tee /etc/apt/sources.list.d/usdr-lib.list
 sudo apt update
 sudo apt install usdr-tools usdr-dkms soapysdr-module-usdr
