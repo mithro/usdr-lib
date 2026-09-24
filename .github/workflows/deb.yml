@@ -94,9 +94,5 @@ jobs:
       suites: "trixie"
       architectures: "amd64 arm64 all"
       description: "uSDR host libraries, tools and PCIe DKMS driver (Wavelet Lab XSDR)"
-      # Transitional: the previous repository at the site root (Origin
-      # mithro-usdr) and the key's old names, frozen, until every client
-      # points at <site>/trixie/ with usdr-lib.gpg.
-      legacy-paths: ". usdr.gpg usdr.asc"
     secrets:
       gpg-private-key: ${{ secrets.APT_GPG_PRIVATE_KEY }}
