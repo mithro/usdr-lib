@@ -76,101 +76,27 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: debs-${{ matrix.arch }}
+          name: debs-trixie-${{ matrix.arch }}
           path: built-debs/
 
   publish-apt:
+    # Index, sign and deploy through the shared workflow: one flat repository
+    # per suite (<site>/trixie/), key usdr-lib.gpg, Origin usdr-lib -- the
+    # convention every apt repository follows (docs/conventions.md in
+    # mithro/apt-repo-action).
     needs: build-deb
-    runs-on: ubuntu-latest
     permissions:
+      contents: read
       pages: write
       id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: debs-*
-          merge-multiple: true
-          path: apt-repo/
-
-      - name: Generate apt repo metadata
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends dpkg-dev apt-utils
-          cd apt-repo
-          dpkg-scanpackages --multiversion . > Packages
-          gzip -k Packages
-          cat > Release <<EOF
-          Origin: mithro-usdr
-          Label: mithro-usdr
-          Suite: stable
-          Codename: trixie
-          Architectures: amd64 arm64 all
-          Components: main
-          Description: uSDR host libraries, tools and PCIe DKMS driver (Wavelet Lab XSDR), built for Debian 13 trixie
-          EOF
-          apt-ftparchive release . >> Release
-
-      - name: Sign repo
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
-        if: env.GPG_PRIVATE_KEY != ''
-        run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          cd apt-repo
-          gpg --batch --yes --armor --detach-sign --output Release.gpg Release
-          gpg --batch --yes --armor --clearsign --output InRelease Release
-          # apt reads a keyring's format from its extension: .gpg must be
-          # binary, .asc armoured. An armoured .gpg is invisible on trixie
-          # (sqv reads both) but gpgv rejects it and the repo reads as
-          # unsigned. Publish both, each under the extension apt expects.
-          gpg --batch --yes --export > usdr.gpg
-          gpg --batch --yes --armor --export > usdr.asc
-
-      - name: Fetch the keyring checker
-        if: hashFiles('apt-repo/usdr.gpg') != ''
-        uses: actions/checkout@v4
-        with:
-          repository: mithro/apt-repo-action
-          path: .apt-repo-action
-
-      - name: Verify each keyring matches the format its extension promises
-        if: hashFiles('apt-repo/usdr.gpg') != ''
-        run: |
-          python3 .apt-repo-action/scripts/check-keyrings.py \
-            --binary apt-repo/usdr.gpg --armored apt-repo/usdr.asc
-
-      - name: Create index page
-        run: |
-          cat > apt-repo/index.html <<'HTMLEOF'
-          <!DOCTYPE html>
-          <html><head><title>mithro usdr apt repository</title></head>
-          <body>
-          <h1>mithro usdr apt repository</h1>
-          <p>Snapshot build of <a href="https://github.com/wavelet-lab/usdr-lib">wavelet-lab/usdr-lib</a>
-          for <b>Debian 13 (trixie)</b>, arm64 + amd64. Upstream ships bookworm and
-          bionic packages only. Provides the uSDR host library, tools
-          (<code>usdr_dm_create</code>, <code>usdr_dm_sensors</code>,
-          <code>usdr_flash</code>), the SoapySDR module and the
-          <code>usdr_pcie_uram</code> PCIe driver as DKMS.</p>
-          <h2>Setup</h2>
-          <pre>
-          curl -fsSL https://mithro.github.io/usdr-lib/usdr.gpg \
-            | sudo tee /etc/apt/keyrings/mithro-usdr.gpg > /dev/null
-          echo "deb [signed-by=/etc/apt/keyrings/mithro-usdr.gpg] https://mithro.github.io/usdr-lib/ ./" \
-            | sudo tee /etc/apt/sources.list.d/mithro-usdr.list
-          sudo apt update
-          sudo apt install usdr-tools usdr-dkms soapysdr-module-usdr
-          </pre>
-          </body></html>
-          HTMLEOF
-          sed -i 's/^          //' apt-repo/index.html
-
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: apt-repo/
-      - id: deploy
-        uses: actions/deploy-pages@v4
+    uses: mithro/apt-repo-action/.github/workflows/publish-apt.yml@main
+    with:
+      suites: "trixie"
+      architectures: "amd64 arm64 all"
+      description: "uSDR host libraries, tools and PCIe DKMS driver (Wavelet Lab XSDR)"
+      # Transitional: the previous repository at the site root (Origin
+      # mithro-usdr) and the key's old names, frozen, until every client
+      # points at <site>/trixie/ with usdr-lib.gpg.
+      legacy-paths: ". usdr.gpg usdr.asc"
+    secrets:
+      gpg-private-key: ${{ secrets.APT_GPG_PRIVATE_KEY }}
