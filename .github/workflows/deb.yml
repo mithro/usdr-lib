@@ -10,7 +10,7 @@ name: Build deb + publish apt repo
 
 on:
   push:
-    branches: [welland-packaging]
+    branches: [packaging]
   workflow_dispatch:
 
 permissions:

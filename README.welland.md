@@ -68,4 +68,4 @@ On the welland fleet this is done by the `usdr` Ansible role and an
 2. Settings → Secrets and variables → Actions → new secret
    `APT_GPG_PRIVATE_KEY` = the armoured private key
    (`~/.gnupg/apt-signing/usdr-apt-signing.private.asc`)
-3. Push `welland-packaging` — the workflow triggers on that branch
+3. Push `packaging` (the default branch) — the workflow triggers on that branch
