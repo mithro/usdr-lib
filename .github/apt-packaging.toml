@@ -1,0 +1,8 @@
+# What kind of packaging repository this is, and why it differs from the
+# defaults: mithro/apt-repo-action's docs/packaging.md ("The declaration").
+kind = "A"
+upstream = "https://github.com/wavelet-lab/usdr-lib"
+architectures = ["amd64", "arm64"]
+
+[exceptions]
+PKG-ARCH = "upstream supports only amd64 and arm64: its packaging/debian-bookworm/control (and packaging/control-packages on upstream main) restricts every arch-specific package to Architecture: amd64 arm64"
